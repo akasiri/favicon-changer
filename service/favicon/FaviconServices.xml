@@ -21,20 +21,32 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script><![CDATA[
                 def iconName = ec.context.iconName
+                def customIconName = "custom_${iconName}" // prepend "custom_" so as not to overwrite the default "favicon.ico" when copying, in case the given icon is also called "favicon.ico"
                 def location = "runtime/component/favicon-changer/resource/"
 
                 try {
-                    new File("runtime/base-component/webroot/screen/webroot/${iconName}").bytes = new File(location + iconName).bytes
+                    new File("runtime/base-component/webroot/screen/webroot/${customIconName}").bytes = new File(location + iconName).bytes
                 } catch (Exception e) {
                     ec.logger.error("Unable to find favicon \"${iconName}\" in resource directory at \"${location}\"")
                     throw e
                 }
 
                 def shortcutIcon = ec.entity.find("moqui.screen.ScreenThemeResource").condition([resourceTypeEnumId: "STRT_SHORTCUT_ICON"]).forUpdate(true).one()
-                shortcutIcon.resourceValue = iconName
+                shortcutIcon.resourceValue = "/${customIconName}"
                 shortcutIcon.update()
 
-                ec.logger.info("New icon ${iconName} set as the favicon for Moqui. Location: runtime/base-component/webroot/screen/webroot/${iconName}")
+                ec.logger.info("New icon ${customIconName} set as the favicon for Moqui. Location: runtime/base-component/webroot/screen/webroot/{customIconName}")
+             ]]></script>
+        </actions>
+    </service>
+    <service verb="revert" noun="ToDefaultFavicon">
+        <actions>
+            <script><![CDATA[
+                def shortcutIcon = ec.entity.find("moqui.screen.ScreenThemeResource").condition([resourceTypeEnumId: "STRT_SHORTCUT_ICON"]).forUpdate(true).one()
+                shortcutIcon.resourceValue = "/favicon.ico"
+                shortcutIcon.update()
+
+                ec.logger.info("Favicon reset to the default favicon of \"favicon.ico\". Location: runtime/base-component/webroot/screen/webroot/favicon.ico")
              ]]></script>
         </actions>
     </service>
